@@ -22,12 +22,12 @@ class BlogController extends AbstractController
      * @param Request $request
      * @return mixed
      *
-     * @Route("/", name="blog_index")
+     * @Route("/{name}", name="blog_index")
      */
-    public function index(Request $request)
+    public function index($name)
     {
         return $this->render('base.html.twig', ['message' => $this->greeting->greet(
-            $request->get('name')
+            $name
         )]);
     }
 }
