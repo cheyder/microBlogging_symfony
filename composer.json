@@ -42,6 +42,7 @@
     },
     "require-dev": {
         "components/jquery": "^3.5",
+        "doctrine/doctrine-fixtures-bundle": "^3.4",
         "roave/security-advisories": "dev-master",
         "symfony/browser-kit": "^5.1",
         "symfony/css-selector": "^5.1",
