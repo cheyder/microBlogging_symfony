@@ -4,13 +4,12 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Serializable as Serializable;
-use Symfony\Component\Security\Core\User\UserInterface as UserInterfaceAlias;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-class User implements UserInterfaceAlias, Serializable
+class User implements UserInterface
 {
     /**
      * @ORM\Id
@@ -39,19 +38,44 @@ class User implements UserInterfaceAlias, Serializable
      */
     private $fullName;
 
+    public function __serialize(): array
+    {
+        return [
+            'id' => $this->id,
+            'username' => $this->username,
+            'password' => $this->password
+        ];
+    }
+
+    public function __unserialize(array $serialized): void
+    {
+        $this->id = $serialized['id'];
+        $this->username = $serialized['username'];
+        $this->password = $serialized['password'];
+    }
+
+    /**
+     * @return int|null
+     */
     public function getId(): ?int
     {
         return $this->id;
     }
 
     /**
-     * @return string[]
+     * @return string
      */
-    public function getRoles(): array
+    public function getUsername(): string
     {
-        return [
-            'ROLE_USER'
-        ];
+        return $this->username;
+    }
+
+    /**
+     * @param string $username
+     */
+    public function setUsername(string $username): void
+    {
+        $this->username = $username;
     }
 
     /**
@@ -63,41 +87,59 @@ class User implements UserInterfaceAlias, Serializable
     }
 
     /**
-     * @return string|null
+     * @param $password
      */
-    public function getSalt(): ?string
+    public function setPassword($password): void
     {
-        return null;
+        $this->password = $password;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param string $email
+     */
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
     }
 
     /**
      * @return string
      */
-    public function getUsername(): string
+    public function getFullName()
     {
-        return $this->username;
+        return $this->fullName;
+    }
+
+    /**
+     * @param string $fullName
+     */
+    public function setFullName($fullName): void
+    {
+        $this->fullName = $fullName;
+    }
+
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    public function getRoles(): array
+    {
+        return [
+            'ROLE_USER'
+        ];
     }
 
     public function eraseCredentials()
     {
         // TODO: Implement eraseCredentials() method.
-    }
-
-    public function serialize()
-    {
-        return serialize([
-            $this->id,
-            $this->username,
-            $this->password
-        ]);
-    }
-
-    public function unserialize($serialized)
-    {
-        list(
-            $this->id,
-            $this->username,
-            $this->password
-            ) = unserialize($serialized, [__CLASS__]);
     }
 }
