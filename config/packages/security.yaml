@@ -1,16 +1,15 @@
 security:
     encoders:
         # this internal class is used by Symfony to represent in-memory users
-        Symfony\Component\Security\Core\User\User: plaintext
+        # Symfony\Component\Security\Core\User\User: plaintext
+        App\Entity\User: bcrypt
 
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        users_in_memory:
-            memory:
-                users:
-                    john:
-                        password: helloJohn
-                        roles: 'ROLE_USER'
+        database_users:
+            entity:
+                class: App\Entity\User
+                property: username
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
@@ -18,12 +17,19 @@ security:
         main:
             anonymous: true
             lazy: true
-            provider: users_in_memory
+            # authentication, https://symfony.com/doc/current/security.html#firewalls-authentication
+            form_login:
+                check_path: login
+                login_path: login
+                csrf_token_generator: security.csrf.token_manager
+                default_target_path: micro_post_index #if user directly logged in and there is no url saved in the session, the user is redirected to this default
+                #always_use_default_target_path: false
+                #use_referer: true #redirects user to last visited page before login, uses the HTTP_REFERER
+                #failure_path: #where to redirect the user after failing login
+            logout:
+                path: logout
+                target: micro_post_index
 
-            # activate different ways to authenticate
-            # https://symfony.com/doc/current/security.html#firewalls-authentication
-            http_basic:
-                realm: Secured Area
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
@@ -31,6 +37,6 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/add, roles: ROLE_USER}
+        # - { path: ^/add, roles: ROLE_USER}
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
