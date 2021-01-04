@@ -4,16 +4,22 @@
 namespace App\Controller;
 
 use App\Entity\MicroPost;
+use App\Entity\User;
 use App\Form\MicroPostType;
 use App\Repository\MicroPostRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 /**
  * @Route("/micro-post")
@@ -36,17 +42,23 @@ class MicroPostController extends AbstractController
      * @var FlashBagInterface
      */
     private $flashBag;
+    /**
+     * @var AuthorizationCheckerInterface
+     */
+    private $authorizationChecker;
 
     public function __construct(
         MicroPostRepository $microPostRepository,
         FormFactoryInterface $formFactory,
         EntityManagerInterface $entityManager,
-        FlashBagInterface $flashBag
+        FlashBagInterface $flashBag, 
+        AuthorizationCheckerInterface $authorizationChecker
     ) {
         $this->microPostRepository = $microPostRepository;
         $this->formFactory = $formFactory;
         $this->entityManager = $entityManager;
         $this->flashBag = $flashBag;
+        $this->authorizationChecker = $authorizationChecker;
     }
 
     /**
@@ -63,12 +75,19 @@ class MicroPostController extends AbstractController
 
     /**
      * @Route("/edit/{id}", name="micro_post_edit")
+     *
      * @param MicroPost $microPost
      * @param Request $request
      * @return Response
      */
     public function edit(MicroPost $microPost, Request $request)
     {
+        if (!$this->authorizationChecker->isGranted('edit', $microPost)) {
+            throw new UnauthorizedHttpException();
+        }
+
+        // $this->denyAccessUnlessGranted('edit', $microPost);
+        
         $form = $this->formFactory->create(MicroPostType::class, $microPost);
         $form->handleRequest($request);
 
@@ -86,13 +105,17 @@ class MicroPostController extends AbstractController
 
     /**
      * @Route("/add", name="micro_post_add")
+     * @Security("is_granted('ROLE_USER')")
      * @param Request $request
+     * @param TokenStorageInterface $tokenStorage
      * @return Response
      */
-    public function add(Request $request)
+    public function add(Request $request, TokenStorageInterface $tokenStorage): Response
     {
+        $user = $tokenStorage->getToken()->getUser();
+
         $microPost = new MicroPost();
-        $microPost->setTime(new DateTime());
+        $microPost->setUser($user);
 
         $form = $this->formFactory->create(MicroPostType::class, $microPost);
         $form->handleRequest($request);
@@ -111,6 +134,18 @@ class MicroPostController extends AbstractController
     }
 
     /**
+     * @Route("/user/{username}", name="micro_post_user")
+     * @param User $user
+     */
+    public function userPosts(User $userWithPosts)
+    {
+        return $this->render(
+            'micro-post/index.html.twig', [
+                'posts' => $userWithPosts->getPosts()
+        ]);
+    }
+
+    /**
      * @Route("/{id}", name="micro_post_post")
      * @param MicroPost $post
      * @return Response
@@ -125,6 +160,8 @@ class MicroPostController extends AbstractController
 
     /**
      * @Route("/delete/{id}", name="micro_post_delete")
+     * @Security("is_granted('delete', microPost)", message="Access denied")
+     *
      * @param MicroPost $post
      */
     public function delete(MicroPost $microPost)
