@@ -8,6 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=MicroPostRepository::class)
+ * @ORM\HasLifecycleCallbacks()
  */
 class MicroPost
 {
@@ -32,7 +33,7 @@ class MicroPost
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="posts")
-     * @ORM\JoinColumn()
+     * @ORM\JoinColumn(nullable=false)
      */
     private $user;
 
@@ -77,7 +78,14 @@ class MicroPost
     }
 
     /**
-     * @return mixed
+     * @ORM\PrePersist()
+     */
+    public function setTimeOnPersist()
+    {
+        $this->time = new \DateTime();
+    }
+    /**
+     * @return User
      */
     public function getUser()
     {
