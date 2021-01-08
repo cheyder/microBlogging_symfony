@@ -17,7 +17,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
@@ -135,13 +134,18 @@ class MicroPostController extends AbstractController
 
     /**
      * @Route("/user/{username}", name="micro_post_user")
-     * @param User $user
+     * @param User $userWithPosts
+     * @return Response
      */
-    public function userPosts(User $userWithPosts)
+    public function userPosts(User $userWithPosts): Response
     {
         return $this->render(
-            'micro-post/index.html.twig', [
-                'posts' => $userWithPosts->getPosts()
+            'micro-post/user-posts.html.twig', [
+                'posts' => $this->microPostRepository->findBy(
+                    ['user' => $userWithPosts],
+                    ['time' => 'DESC']
+                ),
+                'user' => $userWithPosts
         ]);
     }
 

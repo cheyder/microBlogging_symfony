@@ -235,17 +235,17 @@ class User implements UserInterface
     }
 
     /**
-     * @return ArrayCollection
+     * @return Collection
      */
-    public function getFollowers(): ArrayCollection
+    public function getFollowers(): Collection
     {
         return $this->followers;
     }
 
     /**
-     * @return ArrayCollection
+     * @return Collection
      */
-    public function getFollowing(): ArrayCollection
+    public function getFollowing(): Collection
     {
         return $this->following;
     }
