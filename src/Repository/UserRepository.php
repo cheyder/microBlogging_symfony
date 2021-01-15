@@ -19,6 +19,31 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
+    public function findAllWithMoreThan5Posts()
+    {
+        return $this->getFindAllWithMoreThan5PostsQuery()
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findAllWithMoreThan5PostsExceptUser(User $user)
+    {
+        return $this->getFindAllWithMoreThan5PostsQuery()
+            ->andHaving('u != :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getResult();
+    }
+
+    private function getFindAllWithMoreThan5PostsQuery()
+    {
+        $qb = $this->createQueryBuilder('u');
+
+        return $qb->select('u')
+            ->innerJoin('u.posts', 'p')
+            ->groupBy('u')
+            ->having('count(p) > 5');
+    }
     // /**
     //  * @return User[] Returns an array of User objects
     //  */

@@ -23,12 +23,18 @@ class FollowingController extends AbstractController
      */
     public function follow(User $userToFollow): RedirectResponse
     {
+        /** @var User $currentUser */
         $currentUser = $this->getUser();
-        //$currentUser->getFollowing()->add($userToFollow);
-        $userToFollow->addFollowing($currentUser);
-
-        $this->getDoctrine()->getManager()->flush();
-
+        if($userToFollow->getId() !== $currentUser->getId()) {
+            //to add a mtm-relation it has to be done through the owing side
+            $currentUser->follow($userToFollow);
+            /**
+             * otherwise it's only possible if you inverse it through an helper method
+             * $userToFollow->addFollowing($currentUser);
+             * see user-entity
+             */
+            $this->getDoctrine()->getManager()->flush();
+        }
         return $this->redirectToRoute('micro_post_user', ['username' => $userToFollow->getUsername()]);
     }
 

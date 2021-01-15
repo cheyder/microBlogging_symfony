@@ -249,4 +249,24 @@ class User implements UserInterface
     {
         return $this->following;
     }
+
+    /**
+     * @param User $userToFollow
+     */
+    public function follow(User $userToFollow): void
+    {
+        if ($this->getFollowing()->contains($userToFollow)){
+            return;
+        }
+        $this->getFollowing()->add($userToFollow);
+    }
+
+    /**
+     * only an example how to add a mtm-relation through the inversed side
+     * @param User $user
+     */
+    public function addThisFollowerTo(User $user): void
+    {
+        $user->getFollowing()->add($this);
+    }
 }
